@@ -1,0 +1,32 @@
+body {
+	background-color: #ddd;
+}        
+        
+.btn-primary:hover {
+    background-color: #980000;
+}
+
+.img-responsive {
+	margin-top: 10px;
+	margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.error {
+	color: red;
+	font-weight: bold;
+}
+
+.centerBlock {
+	display: table;
+	margin: 0 auto;
+}
+
+#footer{
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+	#footer #logo{
+		max-width: 300px;
+	}

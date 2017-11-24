@@ -1,0 +1,117 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.0.xsd">
+
+    <mvc:annotation-driven/>
+    <mvc:default-servlet-handler/>
+    <context:component-scan base-package="pt.ulusofona.es.g6.controller" />
+
+    <mvc:resources mapping="/resources/**" location="/resources/"/>
+
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="messages" />
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix">
+            <value>/WEB-INF/jsp/</value>
+        </property>
+        <property name="suffix">
+            <value>.jsp</value>
+        </property>
+    </bean>
+
+    <!-- use embedded derby database -->
+    <!-- <jdbc:embedded-database id="dataSource" type="DERBY"/> -->
+
+    <!-- use real mysql database -->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://localhost:3306/despesas" />
+        <property name="username" value="despesasUser" />
+        <property name="password" value="xpto1234" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="emf"/>
+    </bean>
+
+    <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <!-- Create the database, please -->
+                <property name="generateDdl" value="true" />
+            </bean>
+        </property>
+
+        <property name="packagesToScan" value="pt.ulusofona.es.g6.data"/>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.dialect">
+                    <!-- org.hibernate.dialect.DerbyTenSevenDialect -->   <!-- use this for derby -->
+                    org.hibernate.dialect.MySQL5Dialect              <!-- use this for mysql -->
+                </prop>
+                <prop key="hibernate.max_fetch_depth">3</prop>
+                <prop key="hibernate.jdbc.fetch_size">50</prop>
+                <prop key="hibernate.jdbc.batch_size">10</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- Tiles configuration -->
+    <bean id="tilesConfigurer"
+          class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+        <property name="definitions">
+            <list>
+                <value>/WEB-INF/tiles/tiles-definitions.xml</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- security -->
+    <security:http auto-config="true" use-expressions="true">
+        <security:access-denied-handler error-page="/home" />
+        <security:intercept-url pattern="/login" access="permitAll" />
+        <security:intercept-url pattern="/home" access="hasRole('ROLE_USER')" />
+        <security:intercept-url pattern="/categoria/**" access="hasRole('ROLE_ADMIN')" />
+        <security:intercept-url pattern="/despesa/**" access="hasRole('ROLE_USER')" />
+        <security:form-login
+                login-page="/login"
+                login-processing-url="/j_spring_security_check"
+                default-target-url="/home"
+                authentication-failure-url="/login"
+                username-parameter="j_username"
+                password-parameter="j_password" />
+        <security:logout
+                logout-url="/j_spring_security_logout"
+                logout-success-url="/login"
+                invalidate-session="true" />
+        <security:csrf disabled="true" />
+    </security:http>
+
+    <security:authentication-manager>
+        <security:authentication-provider>
+            <security:user-service>
+                <security:user name="admin" password="admin123" authorities="ROLE_ADMIN, ROLE_USER" />
+                <security:user name="user1" password="user1" authorities="ROLE_USER" />
+                <security:user name="user2" password="user2" authorities="ROLE_USER" />
+                <security:user name="user3" password="user3" authorities="ROLE_USER" />
+            </security:user-service>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver" />
+
+</beans>
